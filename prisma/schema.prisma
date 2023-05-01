@@ -13,6 +13,9 @@ datasource db {
 
 model User {
   id    Int     @id @default(autoincrement())
+  username String @unique
+  pass String
+  salt String
   email String  @unique
   name  String?
 }
