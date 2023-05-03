@@ -2,12 +2,20 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import * as basicAuth from 'express-basic-auth';
+import {
+  FastifyAdapter,
+  NestFastifyApplication,
+} from '@nestjs/platform-fastify';
 
 const SWAGGER_ENVS = ['local', 'dev', 'staging'];
 
 async function bootstrap() {
   const PORT = process.env.PORT || 3000;
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create<NestFastifyApplication>(
+    AppModule,
+    new FastifyAdapter(),
+    { cors: true },
+  );
 
   if (SWAGGER_ENVS.includes(process.env.NODE_ENV)) {
     app.use(
@@ -20,10 +28,11 @@ async function bootstrap() {
       }),
     );
   }
-  app.enableCors({
-    origin: '*',
-    allowedHeaders: 'Content-Type, Access-Control-Allow-Headers, Authorization',
-  });
+
+  // app.enableCors({
+  //   origin: '*',
+  //   allowedHeaders: 'Content-Type, Access-Control-Allow-Headers, Authorization',
+  // });
 
   const config = new DocumentBuilder()
     .setTitle('Nest-Template')
@@ -35,7 +44,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
-  await app.listen(PORT);
+  await app.listen(PORT, '0.0.0.0');
 
   console.log(`LISTEN ON PROT : ${PORT}`);
   console.log(`${await app.getUrl()}`);
